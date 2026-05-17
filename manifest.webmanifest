@@ -1,0 +1,17 @@
+{
+  "name": "Donut Horror Sudoku",
+  "short_name": "Sudoku Scream",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#150914",
+  "theme_color": "#ffd52e",
+  "description": "A spooky cartoon themed Sudoku PWA for iPhone.",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
