@@ -17,6 +17,7 @@ let currentDifficulty = 'easy';
 let selectedCell = null;
 let timerInterval;
 let seconds = 0;
+let moveCount = 0;
 
 const boardElement = document.getElementById('board');
 const timerElement = document.getElementById('timer');
@@ -60,6 +61,8 @@ function loadBestTime() {
 
 function createBoard() {
   boardElement.innerHTML = '';
+  selectedCell = null;
+  moveCount = 0;
 
   const data = puzzles[currentDifficulty];
 
@@ -87,6 +90,7 @@ function createBoard() {
     boardElement.appendChild(button);
   });
 
+  messageElement.textContent = 'Place numbers freely. The board checks after several moves.';
   startTimer();
   loadBestTime();
 }
@@ -99,39 +103,106 @@ function selectCell(cell) {
   selectedCell.classList.add('selected');
 }
 
-function validatePlacement(number) {
+function getCells() {
+  return [...document.querySelectorAll('.cell')];
+}
+
+function getCellValue(index) {
+  return getCells()[index].textContent.trim();
+}
+
+function getConflictIndexes() {
+  const conflicts = new Set();
+
+  function checkGroup(indexes) {
+    const seen = new Map();
+
+    indexes.forEach((index) => {
+      const value = getCellValue(index);
+      if (!value) return;
+
+      if (seen.has(value)) {
+        conflicts.add(index);
+        conflicts.add(seen.get(value));
+      } else {
+        seen.set(value, index);
+      }
+    });
+  }
+
+  for (let row = 0; row < 9; row += 1) {
+    checkGroup(Array.from({ length: 9 }, (_, col) => row * 9 + col));
+  }
+
+  for (let col = 0; col < 9; col += 1) {
+    checkGroup(Array.from({ length: 9 }, (_, row) => row * 9 + col));
+  }
+
+  for (let boxRow = 0; boxRow < 3; boxRow += 1) {
+    for (let boxCol = 0; boxCol < 3; boxCol += 1) {
+      const indexes = [];
+      for (let r = 0; r < 3; r += 1) {
+        for (let c = 0; c < 3; c += 1) {
+          indexes.push((boxRow * 3 + r) * 9 + boxCol * 3 + c);
+        }
+      }
+      checkGroup(indexes);
+    }
+  }
+
+  return conflicts;
+}
+
+function checkBoard(showCleanMessage = true) {
+  const cells = getCells();
+  cells.forEach((cell) => cell.classList.remove('invalid'));
+
+  const conflicts = getConflictIndexes();
+
+  if (conflicts.size > 0) {
+    conflicts.forEach((index) => cells[index].classList.add('invalid'));
+    messageElement.textContent = `${conflicts.size} Sudoku conflict${conflicts.size === 1 ? '' : 's'} found. Fix the highlighted squares.`;
+    return false;
+  }
+
+  if (showCleanMessage) {
+    messageElement.textContent = 'No conflicts so far.';
+  }
+
+  return true;
+}
+
+function placeNumber(number) {
   if (!selectedCell) return;
 
-  const index = Number(selectedCell.dataset.index);
-  const correct = puzzles[currentDifficulty].solution[index];
+  selectedCell.textContent = number;
+  selectedCell.classList.remove('invalid');
+  moveCount += 1;
 
-  if (String(number) === correct) {
-    selectedCell.textContent = number;
-    selectedCell.dataset.locked = 'true';
-    selectedCell.disabled = true;
-    selectedCell.classList.remove('selected');
-    selectedCell = null;
-    messageElement.textContent = 'Correct placement.';
-
-    checkWin();
+  if (moveCount >= 4 && moveCount % 3 === 1) {
+    checkBoard();
   } else {
-    selectedCell.classList.add('invalid');
-    messageElement.textContent = 'Wrong number rejected instantly.';
-
-    setTimeout(() => {
-      selectedCell?.classList.remove('invalid');
-    }, 500);
+    messageElement.textContent = 'Placed. Keep going.';
   }
+
+  checkWin();
 }
 
 function checkWin() {
-  const remaining = [...document.querySelectorAll('.cell:not(.prefilled)')]
-    .some((cell) => !cell.disabled);
+  const cells = getCells();
+  const filled = cells.every((cell) => cell.textContent.trim() !== '');
 
-  if (!remaining) {
+  if (!filled) return;
+
+  const noConflicts = checkBoard(false);
+  const solved = cells.every((cell, index) => cell.textContent.trim() === puzzles[currentDifficulty].solution[index]);
+
+  if (noConflicts && solved) {
     clearInterval(timerInterval);
     saveBestTime();
     messageElement.textContent = 'Puzzle solved. New horror donut record locked in.';
+  } else {
+    messageElement.textContent = 'Board is full, but something is still off.';
   }
 }
 
@@ -139,6 +210,8 @@ function clearSelectedCell() {
   if (!selectedCell) return;
 
   selectedCell.textContent = '';
+  selectedCell.classList.remove('invalid');
+  messageElement.textContent = 'Cell cleared.';
 }
 
 function changeDifficulty(level) {
@@ -156,7 +229,7 @@ window.addEventListener('DOMContentLoaded', () => {
   createBoard();
 
   document.querySelectorAll('.number-pad button').forEach((button) => {
-    button.addEventListener('click', () => validatePlacement(button.dataset.number));
+    button.addEventListener('click', () => placeNumber(button.dataset.number));
   });
 
   document.querySelectorAll('.difficulty').forEach((button) => {
@@ -165,14 +238,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('newPuzzle').addEventListener('click', createBoard);
   document.getElementById('clearCell').addEventListener('click', clearSelectedCell);
-  document.getElementById('startEasy').addEventListener('click', () => {
-    changeDifficulty('easy');
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-  });
-
-  document.getElementById('howToInstall').addEventListener('click', () => {
-    installDialog.showModal();
-  });
 
   installBtn.addEventListener('click', () => {
     installDialog.showModal();
