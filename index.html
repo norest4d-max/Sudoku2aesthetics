@@ -16,7 +16,7 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="hero-card">
+      <header class="hero-card minimal-hero">
         <nav class="top-bar">
           <div class="brand-badge" aria-label="Donut Horror Sudoku logo">
             <span class="donut">🍩</span>
@@ -24,19 +24,6 @@
           </div>
           <button id="installBtn" class="install-button" type="button">Add to Home Screen</button>
         </nav>
-
-        <section class="hero-copy">
-          <p class="eyebrow">iPhone-ready puzzle web app</p>
-          <h1>Themed Sudoku for people who want every puzzle to look alive.</h1>
-          <p>
-            A bold donut-jelly, yellow-cartoon, pink-fire, Treehouse-of-Horror inspired Sudoku experience.
-            Install it to your Home Screen and play like a real app — no App Store needed.
-          </p>
-          <div class="hero-actions">
-            <button id="startEasy" class="primary-action" type="button">Start Easy</button>
-            <button id="howToInstall" class="secondary-action" type="button">iOS Install Help</button>
-          </div>
-        </section>
       </header>
 
       <main class="game-card" aria-live="polite">
@@ -82,17 +69,14 @@
           <button id="clearCell" type="button">Clear Cell</button>
         </section>
 
-        <p id="message" class="message">Tap a square, then choose a number. Wrong numbers are rejected instantly.</p>
+        <p id="message" class="message">Tap a square. Invalid Sudoku placements are rejected instantly.</p>
       </main>
     </div>
 
     <dialog id="installDialog" class="install-dialog">
       <form method="dialog">
-        <h2>Put it on your iPhone Home Screen</h2>
-        <p>
-          On iOS Safari: tap <strong>Share</strong>, scroll down, choose <strong>Add to Home Screen</strong>, then tap <strong>Add</strong>.
-          It will open full-screen like an app on your iPhone.
-        </p>
+        <h2>Add to iPhone Home Screen</h2>
+        <p>In Safari, tap <strong>Share</strong> → <strong>Add to Home Screen</strong>.</p>
         <button class="primary-action" type="submit">Got it</button>
       </form>
     </dialog>
